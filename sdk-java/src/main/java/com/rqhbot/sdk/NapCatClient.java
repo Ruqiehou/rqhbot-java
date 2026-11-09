@@ -27,7 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.rqhbot.sdk.config.Config;
+import com.rqhbot.sdk.adapter.AdapterResolver;
 import com.rqhbot.sdk.interfaces.IClient;
 import com.rqhbot.sdk.interfaces.IConnectionEventListener;
 import com.rqhbot.sdk.interfaces.MessageHandler;
@@ -39,7 +39,7 @@ import jakarta.websocket.EndpointConfig;
 import jakarta.websocket.Session;
 
 /**
- * NapCat 客户端 - WebSocket 连接核心
+ * OneBot 11 WebSocket 客户端（NapCat / SnowLuma 通用）
  */
 public class NapCatClient extends Endpoint implements IClient {
     
@@ -93,9 +93,22 @@ public class NapCatClient extends Endpoint implements IClient {
     }
     
     public NapCatClient(String wsUrl, String accessToken, String qqId) {
-        this.wsUrl = wsUrl != null ? wsUrl : Config.NAPCAT_WS_URL;
-        this.accessToken = accessToken != null ? accessToken : Config.NAPCAT_ACCESS_TOKEN;
-        this.qqId = qqId != null ? qqId : Config.NAPCAT_QQ_ID;
+        // 未显式传入的参数按 BACKEND 从 .env / 环境变量解析
+        if (wsUrl == null || accessToken == null || qqId == null) {
+            AdapterResolver defaults = AdapterResolver.fromEnvironment();
+            if (wsUrl == null) {
+                wsUrl = defaults.wsUrl();
+            }
+            if (accessToken == null) {
+                accessToken = defaults.accessToken();
+            }
+            if (qqId == null) {
+                qqId = defaults.qqId();
+            }
+        }
+        this.wsUrl = wsUrl;
+        this.accessToken = accessToken;
+        this.qqId = qqId;
         this.msgQueue = new LinkedBlockingQueue<>(1000);
         this.processingExecutor = Executors.newFixedThreadPool(4);
     }
