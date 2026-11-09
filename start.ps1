@@ -131,7 +131,7 @@ if (-not $connection.TcpTestSucceeded) {
 
 "[启动] RqhBot Java 版主程序..."
 ""
-& $javaExe -cp $classpath com.rqhbot.BotMain --ws-url $wsUrl --access-token $accessToken --qq-id $qqId --plugin-dir plugins
+& $javaExe -cp $classpath com.rqhbot.BotMain --backend $backend --ws-url $wsUrl --access-token $accessToken --qq-id $qqId --plugin-dir plugins
 if ($LASTEXITCODE -ne 0) {
     throw "机器人启动失败，退出码: $LASTEXITCODE"
 }
