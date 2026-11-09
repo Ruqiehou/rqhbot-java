@@ -91,6 +91,7 @@ rqhbot _java/
 │   │       ├── BotClient.java   # 机器人客户端
 │   │       ├── BotAPI.java      # 消息发送 API
 │   │       ├── NapCatClient.java# WebSocket 客户端（通用 OneBot 11）
+│   │       ├── adapter/         # 协议端适配（后端注册表 / 连接参数解析）
 │   │       ├── BotExecutor.java # 统一有界业务线程池
 │   │       ├── pluginsystem/    # 插件系统
 │   │       ├── events/          # 事件模型
@@ -124,17 +125,20 @@ rqhbot _java/
 在 `sdk-java/` 目录下创建 `.env` 文件（NapCat / SnowLuma 通用）：
 
 ```env
-# 协议端后端标识：napcat / snowluma（可选，默认 napcat，仅影响日志与 --auto-launch 判定）
+# 协议端后端标识：napcat / snowluma（默认 napcat），决定使用哪套默认地址与专属键
 BACKEND=napcat
-WS_URL=ws://127.0.0.1:3001
+# 通用连接配置（后端专属键 <后端>_WS_URL 优先于它）
+WS_URL=ws://127.0.0.1:3002
 ACCESS_TOKEN=your_token
 QQ_ID=123456789
 ```
 
+未配置 `WS_URL` 时按后端回落到默认地址：NapCat `ws://127.0.0.1:3002`、SnowLuma `ws://127.0.0.1:3001`。
+
 或使用命令行参数：
 
 ```bash
-java -jar rqhbot.jar --ws-url ws://127.0.0.1:3001 --access-token your_token --qq-id 123456789
+java -jar rqhbot.jar --backend napcat --ws-url ws://127.0.0.1:3002 --access-token your_token --qq-id 123456789
 ```
 
 ### 2. 构建运行
@@ -159,7 +163,7 @@ mvn clean package -DskipTests
 
 ## 连接 SnowLuma
 
-SnowLuma 与 NapCat 一样对外提供 **OneBot 11 正向 WebSocket**，因此 RqhBot **无需改动代码**即可连接。
+SnowLuma 与 NapCat 一样对外提供 **OneBot 11 正向 WebSocket**，连接参数由适配层按 `BACKEND` 自动解析（SnowLuma 默认地址 `ws://127.0.0.1:3001`）。
 
 1. 启动 SnowLuma 并登录机器人 QQ（SnowLuma 会自动 hook 注入桌面版 QQ 进程）。
 2. 打开 SnowLuma WebUI（默认 `http://localhost:5099`），在 OneBot 网络配置中开启 **正向 WebSocket 服务端**（`wsServers`），记下端口（默认 `3001`）与访问令牌（可选）。
@@ -167,22 +171,41 @@ SnowLuma 与 NapCat 一样对外提供 **OneBot 11 正向 WebSocket**，因此 R
 
    ```env
    BACKEND=snowluma
-   WS_URL=ws://127.0.0.1:3001
-   ACCESS_TOKEN=<SnowLuma 的 OneBot Token，没有则留空>
-   QQ_ID=<机器人 QQ 号>
+   SNOWLUMA_WS_URL=ws://127.0.0.1:3001
+   SNOWLUMA_ACCESS_TOKEN=<SnowLuma 的 OneBot Token，没有则留空>
+   SNOWLUMA_QQ_ID=<机器人 QQ 号>
    ```
+
+   也可继续使用通用键 `WS_URL` / `ACCESS_TOKEN` / `QQ_ID`；同一项同时存在时，后端专属键优先。
 
 4. 运行 `start.bat`（或 `java -jar ...`）即可。
 
+### 多实例（SnowLuma 多开）
+
+```env
+BACKEND=snowluma
+SNOWLUMA_INSTANCE_1_NAME=主号
+SNOWLUMA_INSTANCE_1_WS_URL=ws://127.0.0.1:3001
+SNOWLUMA_INSTANCE_1_ACCESS_TOKEN=token1
+SNOWLUMA_INSTANCE_2_NAME=小号
+SNOWLUMA_INSTANCE_2_WS_URL=ws://127.0.0.1:3011
+SNOWLUMA_INSTANCE_2_ACCESS_TOKEN=token2
+SNOWLUMA_ACTIVE=0
+```
+
+- `SNOWLUMA_ACTIVE` 为默认实例索引（0 起）；实例未写 `_WS_URL` 时回落 SnowLuma 默认地址。
+- 配置多个实例时，交互式终端启动会提示选择；脚本/非交互环境用 `--instance 2` 指定（从 1 开始）。
+
 > 说明：
-> - 使用 SnowLuma 时**不要**加 `--auto-launch`，该参数只用于自动拉起 NapCat；SnowLuma 请按其自身方式（`launcher.bat` / Docker）启动。
-> - 若 SnowLuma 与机器人不在同一台机器，把 `WS_URL` 的主机换成 SnowLuma 所在地址即可。
-> - 环境变量键也可写成 `SNOWLUMA_WS_URL` / `SNOWLUMA_ACCESS_TOKEN` / `SNOWLUMA_QQ_ID`，与通用的 `WS_URL` 等等价。
+> - 使用 SnowLuma 时**不要**加 `--auto-launch`，该参数只用于自动拉起 NapCat，非 NapCat 后端会自动跳过并告警。
+> - 若 SnowLuma 与机器人不在同一台机器，把地址的主机换成 SnowLuma 所在地址即可。
 
 ## 命令行参数
 
 | 参数 | 说明 |
 |------|------|
+| `--backend <name>` | 协议端后端：`napcat` / `snowluma`（默认 `napcat`） |
+| `--instance <n>` | 多实例后端选择第 n 个实例（从 1 开始，如 SnowLuma 多开） |
 | `--ws-url <url>` | WebSocket 服务器地址 |
 | `--access-token <token>` | 访问令牌 |
 | `--qq-id <qq>` | 机器人 QQ 号 |
