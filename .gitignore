@@ -1,0 +1,94 @@
+# ==================================
+# RQHBot Java Project - .gitignore
+# ==================================
+
+# ==================================
+# Compiled class files
+# ==================================
+*.class
+**/*.class
+
+# ==================================
+# Log files
+# ==================================
+*.log
+**/*.log
+log/
+
+# ==================================
+# Package Files
+# ==================================
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# ==================================
+# Maven
+# ==================================
+target/
+**/target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# ==================================
+# IDE
+# ==================================
+.idea/
+*.iws
+*.iml
+*.ipr
+.vscode/
+.settings/
+.project
+.classpath
+
+# ==================================
+# Environment variables
+# ==================================
+.env
+**/.env
+
+# ==================================
+# OS
+# ==================================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ==================================
+# NapCat runtime (third-party, download separately)
+# ==================================
+napcat/
+
+# ==================================
+# Bundled JDK toolchain
+# ==================================
+sdk-java/lib/
+sdk-java/maven/
+
+# ==================================
+# Plugin build artifacts
+# ==================================
+plugins/**/*.class
+plugins/**/BUILD.md
+
+# ==================================
+# Plugin local assets (fetched/cached images)
+# ==================================
+plugins/kinkus/tup/
+
+# ==================================
+# Runtime data (per-plugin user data, configs)
+# ==================================
+data/
